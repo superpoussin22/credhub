@@ -7,10 +7,7 @@ import com.jayway.jsonpath.PathNotFoundException;
 import org.cloudfoundry.credhub.audit.EventAuditLogService;
 import org.cloudfoundry.credhub.audit.EventAuditRecordParameters;
 import org.cloudfoundry.credhub.exceptions.InvalidQueryParameterException;
-import org.cloudfoundry.credhub.handler.CredentialsHandler;
-import org.cloudfoundry.credhub.handler.GenerateHandler;
-import org.cloudfoundry.credhub.handler.RegenerateHandler;
-import org.cloudfoundry.credhub.handler.SetHandler;
+import org.cloudfoundry.credhub.handler.*;
 import org.cloudfoundry.credhub.request.BaseCredentialGenerateRequest;
 import org.cloudfoundry.credhub.request.BaseCredentialSetRequest;
 import org.cloudfoundry.credhub.request.CredentialRegenerateRequest;
@@ -55,18 +52,21 @@ public class CredentialsController {
   private final EventAuditLogService eventAuditLogService;
   private final ObjectMapper objectMapper;
   private final SetHandler setHandler;
+  private AuditedRetryingCredentialsHandler auditedRetryingCredentialsHandler;
   private final GenerateHandler generateHandler;
   private final RegenerateHandler regenerateHandler;
   private final CredentialsHandler credentialsHandler;
 
   @Autowired
   public CredentialsController(PermissionedCredentialService credentialService,
-      EventAuditLogService eventAuditLogService,
-      ObjectMapper objectMapper,
-      GenerateHandler generateHandler,
-      RegenerateHandler regenerateHandler,
-      CredentialsHandler credentialsHandler,
-      SetHandler setHandler) {
+                               EventAuditLogService eventAuditLogService,
+                               ObjectMapper objectMapper,
+                               GenerateHandler generateHandler,
+                               RegenerateHandler regenerateHandler,
+                               CredentialsHandler credentialsHandler,
+                               SetHandler setHandler,
+                               AuditedRetryingCredentialsHandler auditedRetryingCredentialsHandler) {
+
     this.credentialService = credentialService;
     this.eventAuditLogService = eventAuditLogService;
     this.objectMapper = objectMapper;
@@ -74,21 +74,14 @@ public class CredentialsController {
     this.regenerateHandler = regenerateHandler;
     this.credentialsHandler = credentialsHandler;
     this.setHandler = setHandler;
+    this.auditedRetryingCredentialsHandler = auditedRetryingCredentialsHandler;
   }
 
   @RequestMapping(path = "", method = RequestMethod.POST)
   @ResponseStatus(HttpStatus.OK)
   public CredentialView generate(InputStream inputStream) throws IOException {
     InputStream requestInputStream = new ByteArrayInputStream(ByteStreams.toByteArray(inputStream));
-    try {
-      return auditedHandlePostRequest(requestInputStream);
-    } catch (JpaSystemException | DataIntegrityViolationException e) {
-      requestInputStream.reset();
-      LOGGER.error(
-          "Exception \"" + e.getMessage() + "\" with class \"" + e.getClass().getCanonicalName()
-              + "\" while storing credential, possibly caused by race condition, retrying...");
-      return auditedHandlePostRequest(requestInputStream);
-    }
+      return auditedRetryingCredentialsHandler.handlePostRequest(requestInputStream);
   }
 
   @RequestMapping(path = "", method = RequestMethod.PUT)

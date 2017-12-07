@@ -20,9 +20,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import org.springframework.retry.annotation.EnableRetry;
 
 @SpringBootApplication
 @EnableJpaAuditing(dateTimeProviderRef = "currentTimeProvider")
+@EnableRetry
 public class CredentialManagerApp {
 
   public static void main(String[] args) {
