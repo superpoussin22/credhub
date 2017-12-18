@@ -179,4 +179,24 @@ public class CertificateGetTest {
     assertThat(response, containsString("The request could not be completed because the credential does not exist or you do not have sufficient authorization."));
     auditingHelper.verifyAuditing(CREDENTIAL_FIND, "/my-certificate", UAA_OAUTH2_CLIENT_CREDENTIALS_ACTOR_ID, "/api/v1/certificates", 404);
   }
+
+  @Test
+  public void getCertificateVersionsByCredentialId_returnsAllVersionsOfTheCertificateCredential() throws Exception {
+    generateCertificateCredential(mockMvc, "/first-certificate", CredentialWriteMode.OVERWRITE.mode, "test", null);
+    String certResponse = generateCertificateCredential(mockMvc, "/first-certificate", CredentialWriteMode.OVERWRITE.mode, "test", null);
+
+    String certificateId  = JsonPath.parse(certResponse).read("$.certificate.id");
+
+    MockHttpServletRequestBuilder get = get("/api/v1/certificates/" + certificateId + "/versions")
+        .header("Authorization", "Bearer " + UAA_OAUTH2_PASSWORD_GRANT_TOKEN)
+        .accept(APPLICATION_JSON)
+        .contentType(APPLICATION_JSON);
+
+    String response = mockMvc.perform(get)
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andReturn().getResponse().getContentAsString();
+
+
+  }
 }

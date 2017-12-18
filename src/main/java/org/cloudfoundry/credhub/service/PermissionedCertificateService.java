@@ -82,4 +82,16 @@ public class PermissionedCertificateService {
 
     return Collections.singletonList(certificate);
   }
+
+  public List<Credential> getVersionsByUuid(String credentialUuid, List<EventAuditRecordParameters> auditRecordParameters) {
+    final List<Credential> certificates = certificateDataService.findAllVerionsByCredentialUuid(credentialUuid);
+    auditRecordParameters.add(new EventAuditRecordParameters(AuditingOperationCode.CREDENTIAL_FIND, certificates.get(0).getName()));
+
+    if (certificates.isEmpty() || !permissionCheckingService
+        .hasPermission(userContextHolder.getUserContext().getActor(), certificates.get(0).getName(), PermissionOperation.READ)) {
+      throw new EntryNotFoundException("error.credential.invalid_access");
+    }
+
+    return certificates;
+  }
 }

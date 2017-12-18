@@ -78,4 +78,8 @@ public class CertificatesHandler {
 
     return new CertificateCredentialsView(list);
   }
+
+  public List<CredentialView> handleGetAllVersionsRequest(String credentialUuid, List<EventAuditRecordParameters> auditRecordParameters){
+
+  }
 }
