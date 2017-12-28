@@ -91,8 +91,8 @@ public class BulkRegenerateTest {
         .build();
     auditingHelper = new AuditingHelper(requestAuditRecordRepository, eventAuditRecordRepository);
 
-    generateCA("/ca-to-rotate", "original ca");
-    generateCA("/other-ca", "other ca");
+    generateRootCA("/ca-to-rotate", "original ca");
+    generateRootCA("/other-ca", "other ca");
 
     generateSignedCertificate("/cert-to-regenerate", "cert to regenerate", "/ca-to-rotate");
     generateSignedCertificate("/cert-to-regenerate", "cert to regenerate", "/ca-to-rotate");
@@ -316,7 +316,92 @@ public class BulkRegenerateTest {
         .andExpect(jsonPath("$.error", IsEqual.equalTo("You must specify a signing CA. Please update and retry your request.")));
   }
 
-  private void generateCA(String caName, String caCommonName) throws Exception {
+  @Test
+  public void regeneratingCertificatesSignedByCa_recursivelyRegeneratesLeafCertificatesInChain() throws Exception  {
+    generateIntermediateCA("/a-cert-to-regenerate", "cert to regenerate", "/ca-to-rotate");
+    generateIntermediateCA("/b-cert-to-regenerate", "cert to regenerate", "/ca-to-rotate");
+    generateIntermediateCA("/a-leaf-cert-to-regenerate", "cert to regenerate", "/a-cert-to-regenerate");
+    generateIntermediateCA("/b-leaf-cert-to-regenerate", "cert to regenerate", "/b-cert-to-regenerate");
+    generateIntermediateCA("/c-leaf-cert-to-regenerate", "cert to regenerate", "/a-cert-to-regenerate");
+    generateIntermediateCA("/d-leaf-cert-to-regenerate", "cert to regenerate", "/b-cert-to-regenerate");
+    generateIntermediateCA("/e-leaf-cert-to-regenerate", "cert to regenerate", "/d-leaf-cert-to-regenerate");
+    generateSignedCertificate("/f-leaf-cert-to-regenerate", "cert to regenerate", "/e-leaf-cert-to-regenerate");
+    generateSignedCertificate("/g-leaf-cert-to-regenerate", "cert to regenerate", "/b-leaf-cert-to-regenerate");
+    generateSignedCertificate("/h-leaf-cert-to-regenerate", "cert to regenerate", "/c-leaf-cert-to-regenerate");
+    generateSignedCertificate("/i-leaf-cert-to-regenerate", "cert to regenerate", "/e-leaf-cert-to-regenerate");
+
+
+    MockHttpServletRequestBuilder regenerateCertificatesRequest = post(API_V1_BULK_REGENERATE_ENDPOINT)
+        .header("Authorization", "Bearer " + UAA_OAUTH2_CLIENT_CREDENTIALS_ACTOR_ID)
+        .accept(APPLICATION_JSON)
+        .contentType(APPLICATION_JSON)
+        //language=JSON
+        .content("{\n"
+            + "  \"signed_by\" : \"/ca-to-rotate\"\n"
+            + "}");
+
+    String regenerateCertificatesResult = this.mockMvc.perform(regenerateCertificatesRequest)
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andReturn().getResponse().getContentAsString();
+
+    final JSONArray regeneratedCredentials = (new JSONObject(regenerateCertificatesResult)).getJSONArray("regenerated_credentials");
+
+    assertThat(regeneratedCredentials.length(), equalTo(13));
+    assertThat(regeneratedCredentials.getString(0), equalTo("/a-cert-to-regenerate"));
+   }
+
+
+  @Test
+  public void regeneratingCertificatesSignedByCa_willFailIfAnyChildCertificateIsNotWritable() throws Exception  {
+    generateIntermediateCA("/a-cert-to-regenerate", "cert to regenerate", "/ca-to-rotate");
+    generateIntermediateCA("/b-cert-to-regenerate", "cert to regenerate", "/ca-to-rotate");
+    generateIntermediateCA("/a-leaf-cert-to-regenerate", "cert to regenerate", "/a-cert-to-regenerate");
+    generateIntermediateCA("/b-leaf-cert-to-regenerate", "cert to regenerate", "/b-cert-to-regenerate");
+    generateIntermediateCA("/c-leaf-cert-to-regenerate", "cert to regenerate", "/a-cert-to-regenerate");
+    generateIntermediateCA("/d-leaf-cert-to-regenerate", "cert to regenerate", "/b-cert-to-regenerate");
+    generateIntermediateCA("/e-leaf-cert-to-regenerate", "cert to regenerate", "/d-leaf-cert-to-regenerate");
+    generateSignedCertificate("/f-leaf-cert-to-regenerate", "cert to regenerate", "/e-leaf-cert-to-regenerate");
+    generateSignedCertificate("/g-leaf-cert-to-regenerate", "cert to regenerate", "/b-leaf-cert-to-regenerate");
+    generateSignedCertificate("/h-leaf-cert-to-regenerate", "cert to regenerate", "/c-leaf-cert-to-regenerate");
+    generateSignedCertificate("/i-leaf-cert-to-regenerate", "cert to regenerate", "/e-leaf-cert-to-regenerate");
+
+
+    //revoke  access to one certificate
+    MockHttpServletRequestBuilder revokeReadAccess = delete(API_V1_PERMISSION_ENDPOINT + "?credential_name=/i-leaf-cert-to-regenerate&actor=" + UAA_OAUTH2_CLIENT_CREDENTIALS_ACTOR_ID)
+        .header("Authorization", "Bearer " + UAA_OAUTH2_PASSWORD_GRANT_TOKEN)
+        .accept(APPLICATION_JSON);
+
+    mockMvc.perform(revokeReadAccess)
+        .andExpect(status().isNoContent());
+
+    MockHttpServletRequestBuilder regenerateCertificatesRequest = post(API_V1_BULK_REGENERATE_ENDPOINT)
+        .header("Authorization", "Bearer " +  UAA_OAUTH2_CLIENT_CREDENTIALS_ACTOR_ID)
+        .accept(APPLICATION_JSON)
+        .contentType(APPLICATION_JSON)
+        //language=JSON
+        .content("{\n"
+            + "  \"signed_by\" : \"/ca-to-rotate\"\n"
+            + "}");
+
+    this.mockMvc.perform(regenerateCertificatesRequest)
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.error", IsEqual.equalTo("The request could not be completed because the credential does not exist or you do not have sufficient authorization.")));
+
+    assertThat(credentialVersionDataService.findAllByName("/cert-to-regenerate").size(), equalTo(2));
+    assertThat(credentialVersionDataService.findAllByName("/cert-to-regenerate-as-well").size(), equalTo(1));
+    assertThat(credentialVersionDataService.findAllByName("/a-cert-to-regenerate").size(), equalTo(1));
+    assertThat(credentialVersionDataService.findAllByName("/b-cert-to-regenerate").size(), equalTo(1));
+    assertThat(credentialVersionDataService.findAllByName("/c-cert-to-regenerate").size(), equalTo(1));
+    assertThat(credentialVersionDataService.findAllByName("/d-cert-to-regenerate").size(), equalTo(1));
+    assertThat(credentialVersionDataService.findAllByName("/e-cert-to-regenerate").size(), equalTo(1));
+    assertThat(credentialVersionDataService.findAllByName("/f-cert-to-regenerate").size(), equalTo(1));
+    assertThat(credentialVersionDataService.findAllByName("/g-cert-to-regenerate").size(), equalTo(1));
+    assertThat(credentialVersionDataService.findAllByName("/h-cert-to-regenerate").size(), equalTo(1));
+    assertThat(credentialVersionDataService.findAllByName("/i-cert-to-regenerate").size(), equalTo(1));
+  }
+
+  private void generateRootCA(String caName, String caCommonName) throws Exception {
     MockHttpServletRequestBuilder generateCAToRotateRequest = post(API_V1_DATA_ENDPOINT)
         .header("Authorization", "Bearer " + UAA_OAUTH2_PASSWORD_GRANT_TOKEN)
         .accept(APPLICATION_JSON)
@@ -370,4 +455,34 @@ public class BulkRegenerateTest {
     assertThat((new JSONObject(certGenerationResult)).getString("value"), notNullValue());
   }
 
+  private void generateIntermediateCA(String certificateName, String certificatCN, String signingCA) throws Exception {
+    MockHttpServletRequestBuilder generateCertSignedByOriginalCARequest = post(API_V1_DATA_ENDPOINT)
+        .header("Authorization", "Bearer " + UAA_OAUTH2_PASSWORD_GRANT_TOKEN)
+        .accept(APPLICATION_JSON)
+        .contentType(APPLICATION_JSON)
+        //language=JSON
+        .content("{\n"
+            + "  \"name\" : \"" + certificateName + "\",\n"
+            + "  \"type\" : \"certificate\",\n"
+            + "  \"parameters\" : {\n"
+            + "  \"is_ca\": true,\n"
+            + "    \"ca\": \"" + signingCA + "\",\n"
+            + "    \"common_name\": \"" + certificatCN + "\"\n"
+            + "  },\n"
+            + "  \"overwrite\": true,\n"
+            + "  \"additional_permissions\": \n"
+            + "    [\n"
+            + "      {\n"
+            + "        \"actor\": \"" + UAA_OAUTH2_CLIENT_CREDENTIALS_ACTOR_ID + "\",\n"
+            + "        \"operations\": [\"write\"]\n"
+            + "      }\n"
+            + "    ]\n"
+            + "}");
+
+    String certGenerationResult = this.mockMvc.perform(generateCertSignedByOriginalCARequest)
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andReturn().getResponse().getContentAsString();
+    assertThat((new JSONObject(certGenerationResult)).getString("value"), notNullValue());
+  }
 }
