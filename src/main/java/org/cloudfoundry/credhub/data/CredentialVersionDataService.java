@@ -7,6 +7,7 @@ import org.cloudfoundry.credhub.entity.Credential;
 import org.cloudfoundry.credhub.entity.CredentialVersionData;
 import org.cloudfoundry.credhub.exceptions.ParameterizedValidationException;
 import org.cloudfoundry.credhub.repository.CredentialVersionRepository;
+import org.cloudfoundry.credhub.repository.EncryptionKeyCountResult;
 import org.cloudfoundry.credhub.service.EncryptionKeyCanaryMapper;
 import org.cloudfoundry.credhub.view.FindCredentialResult;
 import org.apache.commons.lang3.StringUtils;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -119,6 +121,10 @@ public class CredentialVersionDataService {
     return this.findCertificateNamesByCaName(caName);
   }
 
+  public List<EncryptionKeyCountResult> countGroupByEncryptedCredentialValue() {
+    return credentialVersionRepository.countGroupByEncryptedCredentialValue();
+  }
+
   public List<FindCredentialResult> findContainingName(String name) {
     return findMatchingName("%" + name + "%");
   }
@@ -176,6 +182,10 @@ public class CredentialVersionDataService {
   }
 
   public Long count() {
+    return credentialVersionRepository.count();
+  }
+
+  public Long countAllGroupByEncryptionKeyUuid() {
     return credentialVersionRepository.count();
   }
 

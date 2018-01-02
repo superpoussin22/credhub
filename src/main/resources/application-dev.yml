@@ -10,6 +10,7 @@ encryption:
   - encryption_password: opensesame
     active: true
   - encryption_password: correcthorsebatterystaple
+    active: false
   key_creation_enabled: true
   
 security:

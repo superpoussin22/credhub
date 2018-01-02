@@ -6,6 +6,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,6 +35,13 @@ public interface CredentialVersionRepository extends JpaRepository<CredentialVer
   Long countByEncryptedCredentialValueEncryptionKeyUuidNot(UUID encryptionKeyUuid);
 
   Long countByEncryptedCredentialValueEncryptionKeyUuidIn(List<UUID> encryptionKeyUuids);
+
+  @Query(value = "select new org.cloudfoundry.credhub.repository.EncryptionKeyCountResult(ev.uuid, count(ev.uuid)) "
+//      + "from EncryptedValue ev join CredentialVersion cv on cv.encrypted_value_uuid = ev.uuid "
+      + "from EncryptedValue ev "
+//      + "group by ev.encryptionKeyUuid "
+  )
+  List<EncryptionKeyCountResult> countGroupByEncryptedCredentialValue();
 
   Slice<CredentialVersionData> findByEncryptedCredentialValueEncryptionKeyUuidIn(List<UUID> encryptionKeyUuids, Pageable page);
 

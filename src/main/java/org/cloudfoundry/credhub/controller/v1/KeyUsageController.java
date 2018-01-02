@@ -2,6 +2,7 @@ package org.cloudfoundry.credhub.controller.v1;
 
 import com.google.common.collect.ImmutableMap;
 import org.cloudfoundry.credhub.data.CredentialVersionDataService;
+import org.cloudfoundry.credhub.repository.EncryptionKeyCountResult;
 import org.cloudfoundry.credhub.service.EncryptionKeyCanaryMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -36,6 +38,8 @@ public class KeyUsageController {
   public ResponseEntity<Map> getKeyUsages() {
     List<UUID> canaryKeyInConfigUuids = encryptionKeyCanaryMapper.getKnownCanaryUuids();
 
+    List<EncryptionKeyCountResult> newResult = credentialVersionDataService.countGroupByEncryptedCredentialValue();
+
     Long totalCredCount = credentialVersionDataService.count();
     Long credsNotEncryptedByActiveKey = credentialVersionDataService.countAllNotEncryptedByActiveKey();
     Long credsEncryptedByKnownKeys = credentialVersionDataService
@@ -49,7 +53,8 @@ public class KeyUsageController {
         ImmutableMap.of(
             "active_key", activeKeyCreds,
             "inactive_keys", inactiveKeyCreds,
-            "unknown_keys", unknownKeyCreds),
+            "unknown_keys", unknownKeyCreds,
+            "new_result", newResult),
         HttpStatus.OK);
   }
 }
