@@ -44,6 +44,7 @@ public class EncryptedValueDataService {
   }
 
   public void rotate (EncryptedValue encryptedValue){
+
     String decryptedValue = encryptor.decrypt(encryptedValue);
     EncryptedValue newEncryptedValue = encryptor.encrypt(decryptedValue);
     newEncryptedValue.setUuid(encryptedValue.getUuid());

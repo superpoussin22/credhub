@@ -68,8 +68,7 @@ public class RetryingEncryptionServiceTest {
         .thenReturn(firstKey)
         .thenReturn(secondKey);
 
-    subject = new RetryingEncryptionService(encryptionService, keyMapper,
-        remoteEncryptionConnectable);
+    subject = new RetryingEncryptionService(encryptionService, keyMapper);
 
     final ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
     readLock = spy(rwLock.readLock());
@@ -110,7 +109,7 @@ public class RetryingEncryptionServiceTest {
 
     final InOrder inOrder = inOrder(encryptionService, remoteEncryptionConnectable);
     inOrder.verify(encryptionService).encrypt(eq(activeKeyUuid), eq(firstKey), anyString());
-    inOrder.verify(remoteEncryptionConnectable).reconnect(any(ProviderException.class));
+    inOrder.verify(encryptionService).reconnect(any(ProviderException.class));
     inOrder.verify(encryptionService).encrypt(eq(activeKeyUuid), eq(secondKey), anyString());
   }
 
@@ -159,7 +158,7 @@ public class RetryingEncryptionServiceTest {
 
     assertThat(subject.encrypt("fake-plaintext"), equalTo(expectedEncryption));
 
-    verify(remoteEncryptionConnectable, times(1))
+    verify(encryptionService, times(1))
         .reconnect(any(IllegalBlockSizeException.class));
     verify(keyMapper, times(1)).mapUuidsToKeys();
   }
@@ -237,7 +236,7 @@ public class RetryingEncryptionServiceTest {
 
     final InOrder inOrder = inOrder(encryptionService, remoteEncryptionConnectable);
     inOrder.verify(encryptionService).decrypt(eq(firstKey), any(byte[].class), any(byte[].class));
-    inOrder.verify(remoteEncryptionConnectable).reconnect(any(ProviderException.class));
+    inOrder.verify(encryptionService).reconnect(any(ProviderException.class));
     inOrder.verify(encryptionService)
         .decrypt(eq(secondKey), any(byte[].class), any(byte[].class));
   }
@@ -297,7 +296,7 @@ public class RetryingEncryptionServiceTest {
             .decrypt(new EncryptedValue(activeKeyUuid, "fake-encrypted-value".getBytes(), "fake-nonce".getBytes())),
         equalTo("fake-plaintext"));
 
-    verify(remoteEncryptionConnectable, times(1))
+    verify(encryptionService, times(1))
         .reconnect(any(IllegalBlockSizeException.class));
     verify(keyMapper, times(1)).mapUuidsToKeys();
   }
@@ -371,8 +370,7 @@ public class RetryingEncryptionServiceTest {
 
     RacingRetryingEncryptionServiceForTest(Thread firstThread, Thread secondThread, Object lock) {
       super(RetryingEncryptionServiceTest.this.encryptionService,
-          RetryingEncryptionServiceTest.this.keyMapper,
-          RetryingEncryptionServiceTest.this.remoteEncryptionConnectable);
+          RetryingEncryptionServiceTest.this.keyMapper);
       this.firstThread = firstThread;
       this.secondThread = secondThread;
       this.lock = lock;

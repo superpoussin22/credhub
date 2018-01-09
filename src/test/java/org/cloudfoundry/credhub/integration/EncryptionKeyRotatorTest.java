@@ -3,6 +3,7 @@ package org.cloudfoundry.credhub.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cloudfoundry.credhub.CredentialManagerApp;
 import org.cloudfoundry.credhub.config.EncryptionKeyMetadata;
+import org.cloudfoundry.credhub.config.EncryptionKeyProvider;
 import org.cloudfoundry.credhub.config.EncryptionKeysConfiguration;
 import org.cloudfoundry.credhub.data.CredentialDataService;
 import org.cloudfoundry.credhub.data.CredentialVersionDataService;
@@ -40,6 +41,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.security.Key;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -378,7 +380,7 @@ public class EncryptionKeyRotatorTest {
   private void setActiveKey(int index) {
     List<EncryptionKeyMetadata> keys = new ArrayList<>();
 
-    for (EncryptionKeyMetadata encryptionKeyMetadata : encryptionKeysConfiguration.getKeys()) {
+    for (EncryptionKeyMetadata encryptionKeyMetadata : encryptionKeysConfiguration.getProviders().get(0).getKeys()) {
       EncryptionKeyMetadata clonedKey = new EncryptionKeyMetadata();
 
       clonedKey.setActive(false);
@@ -388,8 +390,11 @@ public class EncryptionKeyRotatorTest {
     }
 
     keys.get(index).setActive(true);
+    EncryptionKeyProvider provider = new EncryptionKeyProvider();
+    provider.setKeys(keys);
+    provider.setType("internal");
 
-    doReturn(keys).when(encryptionKeysConfiguration).getKeys();
+    doReturn(Collections.singletonList(provider)).when(encryptionKeysConfiguration).getProviders();
 
     encryptionKeyCanaryMapper.mapUuidsToKeys();
   }

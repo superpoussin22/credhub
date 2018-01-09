@@ -26,7 +26,7 @@ public class EncryptionKeysConfigurationTest {
 
   @Test
   public void fillsTheListOfKeysFromApplicationYml() {
-    List<EncryptionKeyMetadata> keys = subject.getKeys();
+    List<EncryptionKeyMetadata> keys = subject.getProviders().get(0).getKeys();
     assertThat(keys.size(), equalTo(2));
 
     EncryptionKeyMetadata firstKey = keys.get(0);

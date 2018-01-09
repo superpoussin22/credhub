@@ -5,13 +5,20 @@ auth_server:
   trust_store_password: changeit
 
 encryption:
-  provider: internal
-  keys:
-  - encryption_password: opensesame
-    active: true
-  - encryption_password: correcthorsebatterystaple
+  providers:
+  - type: internal
+    keys:
+    - encryption_password: opensesame
+      active: true
+    - encryption_password: correcthorsebatterystaple
+  - type: hsm
+    partition_name: name
+    partition_password: secretPassword
+    keys:
+    - encryption_key_name: io.pivotal.security.credhub
+      active: false
   key_creation_enabled: true
-  
+
 security:
   authorization:
     acls:

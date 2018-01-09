@@ -1,12 +1,14 @@
 package org.cloudfoundry.credhub.service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.cloudfoundry.credhub.config.EncryptionKeyMetadata;
+import org.cloudfoundry.credhub.config.EncryptionKeyProvider;
 import org.cloudfoundry.credhub.config.EncryptionKeysConfiguration;
 import org.cloudfoundry.credhub.data.EncryptionKeyCanaryDataService;
 import org.cloudfoundry.credhub.entity.EncryptedValue;
 import org.cloudfoundry.credhub.entity.EncryptionKeyCanary;
 import org.cloudfoundry.credhub.util.TimedRetry;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -98,9 +100,21 @@ public class EncryptionKeyCanaryMapper {
     return list;
   }
 
+  //temporary
+  private List<EncryptionKeyMetadata> getActiveProviderKeys(){
+    for (EncryptionKeyProvider p : encryptionKeysConfiguration.getProviders()) {
+      for (EncryptionKeyMetadata k : p.getKeys()) {
+        if (k.isActive()) {
+          return p.getKeys();
+        }
+      }
+    }
+    throw new RuntimeException("No active key was found");
+  }
+
   private void createKeys() {
     keys = newArrayList();
-    encryptionKeysConfiguration.getKeys().forEach(keyMetadata -> {
+    this.getActiveProviderKeys().forEach(keyMetadata -> {
       KeyProxy keyProxy = encryptionService.createKeyProxy(keyMetadata);
       keys.add(keyProxy);
       if (keyMetadata.isActive()) {

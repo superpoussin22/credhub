@@ -2,15 +2,16 @@ package org.cloudfoundry.credhub;
 
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import org.cloudfoundry.credhub.config.JsonContextFactory;
-import org.cloudfoundry.credhub.util.CurrentTimeProvider;
 import org.apache.coyote.http11.AbstractHttp11Protocol;
 import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.cert.X509ExtensionUtils;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.bc.BcDigestCalculatorProvider;
+import org.cloudfoundry.credhub.config.JsonContextFactory;
+import org.cloudfoundry.credhub.util.CurrentTimeProvider;
 import org.cloudfoundry.credhub.util.TimeModuleFactory;
+import org.cloudfoundry.credhub.util.TimedRetry;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
@@ -44,6 +45,11 @@ public class CredentialManagerApp {
     return new CurrentTimeProvider();
   }
 
+  @Bean(name = "timedRetry")
+  public TimedRetry timedRetry(CurrentTimeProvider currentTimeProvider) {
+    return new TimedRetry(currentTimeProvider);
+  }
+
   @Bean
   public Jackson2ObjectMapperBuilder jacksonBuilder(Module javaTimeModule) {
     Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
@@ -70,4 +76,6 @@ public class CredentialManagerApp {
   public MessageSourceAccessor messageSourceAccessor(MessageSource messageSource) {
     return new MessageSourceAccessor(messageSource);
   }
+
+
 }

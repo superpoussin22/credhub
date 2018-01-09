@@ -2,9 +2,6 @@ package org.cloudfoundry.credhub.service;
 
 import org.cloudfoundry.credhub.config.EncryptionKeyMetadata;
 import org.cloudfoundry.credhub.constants.CipherTypes;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -13,15 +10,13 @@ import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 
-@Component
-@ConditionalOnProperty(value = "encryption.provider", havingValue = "internal")
+
 public class InternalEncryptionService extends EncryptionService {
   public static final int GCM_TAG_LENGTH = 128;
 
   private final SecureRandom secureRandom;
   private final PasswordKeyProxyFactory passwordKeyProxyFactory;
 
-  @Autowired
   public InternalEncryptionService(PasswordKeyProxyFactory passwordKeyProxyFactory) throws Exception {
     this.passwordKeyProxyFactory = passwordKeyProxyFactory;
     this.secureRandom = SecureRandom.getInstance("SHA1PRNG");
@@ -45,6 +40,14 @@ public class InternalEncryptionService extends EncryptionService {
   @Override
   KeyProxy createKeyProxy(EncryptionKeyMetadata encryptionKeyMetadata) {
     return passwordKeyProxyFactory.createPasswordKeyProxy(encryptionKeyMetadata, this);
+  }
+
+  @Override
+  public void reconnect(Exception reasonForReconnect) throws Exception {
+    if (reasonForReconnect == null) {
+      return;
+    }
+    throw reasonForReconnect;
   }
 }
 
