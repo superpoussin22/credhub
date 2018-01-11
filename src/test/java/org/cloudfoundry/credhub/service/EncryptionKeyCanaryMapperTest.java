@@ -5,6 +5,7 @@ import org.cloudfoundry.credhub.config.EncryptionKeyMetadata;
 import org.cloudfoundry.credhub.config.EncryptionKeyProvider;
 import org.cloudfoundry.credhub.config.EncryptionKeysConfiguration;
 import org.cloudfoundry.credhub.data.EncryptionKeyCanaryDataService;
+import org.cloudfoundry.credhub.data.IEncryptionService;
 import org.cloudfoundry.credhub.entity.EncryptedValue;
 import org.cloudfoundry.credhub.entity.EncryptionKeyCanary;
 import org.cloudfoundry.credhub.util.TimedRetry;
@@ -381,6 +382,21 @@ public class EncryptionKeyCanaryMapperTest {
     assertThat(subject.getKeyForUuid(unknownCanaryUuid), equalTo(null));
     assertThat(subject.getActiveUuid(), equalTo(activeCanaryUuid));
     assertThat(subject.getCanaryUuidsWithKnownAndInactiveKeys().size(), equalTo(0));
+  }
+
+  @Test
+  public void getEncryptionService_returnsTheEncryptionServiceForTheGivenValue() throws Exception {
+  }
+
+  @Test
+  public void getActiveEncryptionService_returnsTheEncryptionServiceForTheActiveKey() throws Exception {
+    IEncryptionService service = mock(IEncryptionService.class);
+    provider.setKeys(asList(existingKey1Data, activeKeyData, existingKey2Data));
+    subject = new EncryptionKeyCanaryMapper(encryptionKeyCanaryDataService,
+        encryptionKeysConfiguration, encryptionService, timedRetry, true);
+
+    assertThat(subject.getActiveEncryptionService(), equalTo(service));
+
   }
 
   private void assertCanaryValueWasEncryptedAndSavedToDatabase() throws Exception {

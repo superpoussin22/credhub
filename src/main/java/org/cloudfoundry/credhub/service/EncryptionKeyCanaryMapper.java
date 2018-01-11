@@ -6,6 +6,8 @@ import org.cloudfoundry.credhub.config.EncryptionKeyMetadata;
 import org.cloudfoundry.credhub.config.EncryptionKeyProvider;
 import org.cloudfoundry.credhub.config.EncryptionKeysConfiguration;
 import org.cloudfoundry.credhub.data.EncryptionKeyCanaryDataService;
+import org.cloudfoundry.credhub.data.IEncryptionKeyCanaryMapper;
+import org.cloudfoundry.credhub.data.IEncryptionService;
 import org.cloudfoundry.credhub.entity.EncryptedValue;
 import org.cloudfoundry.credhub.entity.EncryptionKeyCanary;
 import org.cloudfoundry.credhub.util.TimedRetry;
@@ -27,7 +29,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static org.apache.commons.lang3.ArrayUtils.toPrimitive;
 
 @Component
-public class EncryptionKeyCanaryMapper {
+public class EncryptionKeyCanaryMapper implements IEncryptionKeyCanaryMapper {
 
   public static final Charset CHARSET = Charset.defaultCharset();
   public static final String CANARY_VALUE = new String(new byte[128], CHARSET);
@@ -53,7 +55,7 @@ public class EncryptionKeyCanaryMapper {
       EncryptionService encryptionService,
       TimedRetry timedRetry,
       @Value("${encryption.key_creation_enabled}") boolean keyCreationEnabled
-  ) {
+  )  {
     this.encryptionKeyCanaryDataService = encryptionKeyCanaryDataService;
     this.encryptionKeysConfiguration = encryptionKeysConfiguration;
     this.encryptionService = encryptionService;
@@ -98,6 +100,16 @@ public class EncryptionKeyCanaryMapper {
     List<UUID> list = getKnownCanaryUuids();
     list.removeIf((uuid) -> activeUuid.equals(uuid));
     return list;
+  }
+
+  @Override
+  public IEncryptionService getEncryptionService(EncryptedValue value) {
+    return null;
+  }
+
+  @Override
+  public IEncryptionService getActiveEncryptionService() {
+    return null;
   }
 
   //temporary

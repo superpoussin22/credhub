@@ -2,7 +2,7 @@ package org.cloudfoundry.credhub.controller.v1;
 
 import com.google.common.collect.ImmutableMap;
 import org.cloudfoundry.credhub.data.CredentialVersionDataService;
-import org.cloudfoundry.credhub.service.EncryptionKeyCanaryMapper;
+import org.cloudfoundry.credhub.data.IEncryptionKeyCanaryMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,12 +22,12 @@ import java.util.UUID;
 public class KeyUsageController {
 
   private final CredentialVersionDataService credentialVersionDataService;
-  private final EncryptionKeyCanaryMapper encryptionKeyCanaryMapper;
+  private final IEncryptionKeyCanaryMapper encryptionKeyCanaryMapper;
 
   @Autowired
   public KeyUsageController(
       CredentialVersionDataService credentialVersionDataService,
-      EncryptionKeyCanaryMapper encryptionKeyCanaryMapper) {
+      IEncryptionKeyCanaryMapper encryptionKeyCanaryMapper) {
     this.credentialVersionDataService = credentialVersionDataService;
     this.encryptionKeyCanaryMapper = encryptionKeyCanaryMapper;
   }

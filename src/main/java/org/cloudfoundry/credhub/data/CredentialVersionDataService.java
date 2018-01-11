@@ -1,5 +1,6 @@
 package org.cloudfoundry.credhub.data;
 
+import org.apache.commons.lang3.StringUtils;
 import org.cloudfoundry.credhub.domain.CredentialFactory;
 import org.cloudfoundry.credhub.domain.CredentialVersion;
 import org.cloudfoundry.credhub.entity.CertificateCredentialVersionData;
@@ -7,9 +8,7 @@ import org.cloudfoundry.credhub.entity.Credential;
 import org.cloudfoundry.credhub.entity.CredentialVersionData;
 import org.cloudfoundry.credhub.exceptions.ParameterizedValidationException;
 import org.cloudfoundry.credhub.repository.CredentialVersionRepository;
-import org.cloudfoundry.credhub.service.EncryptionKeyCanaryMapper;
 import org.cloudfoundry.credhub.view.FindCredentialResult;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -32,7 +31,7 @@ public class CredentialVersionDataService {
   private final CredentialVersionRepository credentialVersionRepository;
   private final CredentialDataService credentialDataService;
   private final JdbcTemplate jdbcTemplate;
-  private final EncryptionKeyCanaryMapper encryptionKeyCanaryMapper;
+  private final IEncryptionKeyCanaryMapper encryptionKeyCanaryMapper;
   private final CredentialFactory credentialFactory;
   private CertificateVersionDataService certificateVersionDataService;
 
@@ -41,7 +40,7 @@ public class CredentialVersionDataService {
       CredentialVersionRepository credentialVersionRepository,
       CredentialDataService credentialDataService,
       JdbcTemplate jdbcTemplate,
-      EncryptionKeyCanaryMapper encryptionKeyCanaryMapper,
+      IEncryptionKeyCanaryMapper encryptionKeyCanaryMapper,
       CredentialFactory credentialFactory,
       CertificateVersionDataService certificateVersionDataService) {
     this.credentialVersionRepository = credentialVersionRepository;

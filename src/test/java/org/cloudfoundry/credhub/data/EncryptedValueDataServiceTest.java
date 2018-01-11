@@ -1,10 +1,8 @@
 package org.cloudfoundry.credhub.data;
 
 import org.cloudfoundry.credhub.CredentialManagerApp;
-import org.cloudfoundry.credhub.domain.Encryptor;
 import org.cloudfoundry.credhub.entity.EncryptedValue;
 import org.cloudfoundry.credhub.repository.EncryptedValueRepository;
-import org.cloudfoundry.credhub.service.EncryptionKeyCanaryMapper;
 import org.cloudfoundry.credhub.util.DatabaseProfileResolver;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,6 +22,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -32,20 +31,16 @@ import static org.mockito.Mockito.when;
 @SpringBootTest(classes = CredentialManagerApp.class)
 public class EncryptedValueDataServiceTest {
   @MockBean
-  EncryptionKeyCanaryMapper encryptionKeyCanaryMapper;
+  IEncryptionKeyCanaryMapper encryptionKeyCanaryMapper;
 
   @MockBean
   EncryptedValueRepository encryptedValueRepository;
-
-  @MockBean
-  Encryptor encryptor;
 
   EncryptedValueDataService subject;
 
   @Before
   public void beforeEach() {
-    subject = new EncryptedValueDataService(encryptionKeyCanaryMapper, encryptedValueRepository,
-        encryptor);
+    subject = new EncryptedValueDataService(encryptionKeyCanaryMapper, encryptedValueRepository);
   }
 
   @Test
@@ -70,17 +65,22 @@ public class EncryptedValueDataServiceTest {
 
   @Test
   public void rotate() throws Exception {
-    EncryptedValue newEncryption = new EncryptedValue(UUID.randomUUID(), "expected value".getBytes(), "nonce".getBytes());
-    EncryptedValue value = new EncryptedValue();
-    value.setEncryptedValue("bytes".getBytes());
-    value.setEncryptionKeyUuid(UUID.randomUUID());
-    value.setNonce("nonce".getBytes());
-    when(encryptor.decrypt(any(EncryptedValue.class))).thenReturn("expected value");
-    when(encryptor.encrypt("expected value")).thenReturn(newEncryption);
+    EncryptedValue value = new EncryptedValue(UUID.randomUUID(), "old value".getBytes(), "nonce".getBytes());
+    String decryptedValue = "some-decrypted-value";
+    EncryptedValue newEncryptedValue = new EncryptedValue(UUID.randomUUID(), "new value".getBytes(), "nonce".getBytes());
+
+    IEncryptionService oldEncryptionService = mock(IEncryptionService.class);
+    IEncryptionService activeEncryptionService = mock(IEncryptionService.class);
+
+    when(encryptionKeyCanaryMapper.getEncryptionService(value)).thenReturn(oldEncryptionService);
+    when(encryptionKeyCanaryMapper.getActiveEncryptionService()).thenReturn(activeEncryptionService);
+
+    when(oldEncryptionService.decrypt(value)).thenReturn(decryptedValue);
+    when(activeEncryptionService.encrypt(decryptedValue)).thenReturn(newEncryptedValue);
+
     subject.rotate(value);
 
-    verify(encryptedValueRepository).saveAndFlush(newEncryption);
-    assertThat(newEncryption.getUuid(), equalTo(value.getUuid()));
+    verify(encryptedValueRepository).saveAndFlush(newEncryptedValue);
+    assertThat(newEncryptedValue.getUuid(), equalTo(value.getUuid()));
   }
-
 }

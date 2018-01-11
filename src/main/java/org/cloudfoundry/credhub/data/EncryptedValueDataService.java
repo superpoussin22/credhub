@@ -1,9 +1,7 @@
 package org.cloudfoundry.credhub.data;
 
-import org.cloudfoundry.credhub.domain.Encryptor;
 import org.cloudfoundry.credhub.entity.EncryptedValue;
 import org.cloudfoundry.credhub.repository.EncryptedValueRepository;
-import org.cloudfoundry.credhub.service.EncryptionKeyCanaryMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -15,18 +13,16 @@ import static org.cloudfoundry.credhub.repository.EncryptedValueRepository.BATCH
 
 @Service
 public class EncryptedValueDataService {
-  private final EncryptionKeyCanaryMapper encryptionKeyCanaryMapper;
+
+  private final IEncryptionKeyCanaryMapper encryptionKeyCanaryMapper;
   private final EncryptedValueRepository encryptedValueRepository;
-  private final Encryptor encryptor;
 
   @Autowired
   protected EncryptedValueDataService(
-      EncryptionKeyCanaryMapper encryptionKeyCanaryMapper,
-      EncryptedValueRepository encryptedValueRepository,
-      Encryptor encryptor) {
+      IEncryptionKeyCanaryMapper encryptionKeyCanaryMapper,
+      EncryptedValueRepository encryptedValueRepository) {
     this.encryptionKeyCanaryMapper = encryptionKeyCanaryMapper;
     this.encryptedValueRepository = encryptedValueRepository;
-    this.encryptor = encryptor;
   }
 
   public Long countAllNotEncryptedByActiveKey() {
@@ -43,11 +39,11 @@ public class EncryptedValueDataService {
         );
   }
 
-  public void rotate (EncryptedValue encryptedValue){
+  public void rotate(EncryptedValue value) {
+    String decrypted = encryptionKeyCanaryMapper.getEncryptionService(value).decrypt(value);
+    EncryptedValue newValue = encryptionKeyCanaryMapper.getActiveEncryptionService().encrypt(decrypted);
 
-    String decryptedValue = encryptor.decrypt(encryptedValue);
-    EncryptedValue newEncryptedValue = encryptor.encrypt(decryptedValue);
-    newEncryptedValue.setUuid(encryptedValue.getUuid());
-    encryptedValueRepository.saveAndFlush(newEncryptedValue);
+    newValue.setUuid(value.getUuid());
+    encryptedValueRepository.saveAndFlush(newValue);
   }
 }

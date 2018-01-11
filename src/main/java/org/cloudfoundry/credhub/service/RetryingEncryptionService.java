@@ -2,6 +2,7 @@ package org.cloudfoundry.credhub.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cloudfoundry.credhub.data.IEncryptionKeyCanaryMapper;
 import org.cloudfoundry.credhub.entity.EncryptedValue;
 import org.cloudfoundry.credhub.exceptions.KeyNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,15 +17,17 @@ import javax.crypto.IllegalBlockSizeException;
 public class RetryingEncryptionService {
 
   private final EncryptionService encryptionService;
-  private final EncryptionKeyCanaryMapper keyMapper;
+  private final IEncryptionKeyCanaryMapper keyMapper;
   private final Logger logger;
   // for testing
   ReentrantReadWriteLock readWriteLock;
   private volatile boolean needsReconnect; // volatile so all threads see changes
 
   @Autowired
-  public RetryingEncryptionService(EncryptionService encryptionService,
-      EncryptionKeyCanaryMapper keyMapper) {
+  public RetryingEncryptionService(
+      EncryptionService encryptionService,
+      IEncryptionKeyCanaryMapper keyMapper
+  ) {
     this.encryptionService = encryptionService;
     this.keyMapper = keyMapper;
 
@@ -34,7 +37,8 @@ public class RetryingEncryptionService {
 
   public EncryptedValue encrypt(final String value) throws Exception {
     logger.info("Attempting encrypt");
-    return retryOnErrorWithRemappedKey(() -> encryptionService.encrypt(keyMapper.getActiveUuid(), keyMapper.getActiveKey(), value));
+    return retryOnErrorWithRemappedKey(
+        () -> encryptionService.encrypt(keyMapper.getActiveUuid(), keyMapper.getActiveKey(), value));
   }
 
   public String decrypt(EncryptedValue encryptedValue)

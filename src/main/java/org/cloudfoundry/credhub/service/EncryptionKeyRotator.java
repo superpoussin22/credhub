@@ -1,11 +1,12 @@
 package org.cloudfoundry.credhub.service;
 
-import org.cloudfoundry.credhub.data.EncryptedValueDataService;
-import org.cloudfoundry.credhub.data.EncryptionKeyCanaryDataService;
-import org.cloudfoundry.credhub.entity.EncryptedValue;
-import org.cloudfoundry.credhub.exceptions.KeyNotFoundException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cloudfoundry.credhub.data.EncryptedValueDataService;
+import org.cloudfoundry.credhub.data.EncryptionKeyCanaryDataService;
+import org.cloudfoundry.credhub.data.IEncryptionKeyCanaryMapper;
+import org.cloudfoundry.credhub.entity.EncryptedValue;
+import org.cloudfoundry.credhub.exceptions.KeyNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
@@ -18,13 +19,13 @@ public class EncryptionKeyRotator {
 
   private final EncryptedValueDataService encryptedValueDataService;
   private final Logger logger;
-  private final EncryptionKeyCanaryMapper encryptionKeyCanaryMapper;
+  private final IEncryptionKeyCanaryMapper encryptionKeyCanaryMapper;
   private final EncryptionKeyCanaryDataService encryptionKeyCanaryDataService;
 
   @Autowired
   EncryptionKeyRotator(
       EncryptedValueDataService encryptedValueDataService,
-      EncryptionKeyCanaryMapper encryptionKeyCanaryMapper,
+      IEncryptionKeyCanaryMapper encryptionKeyCanaryMapper,
       EncryptionKeyCanaryDataService encryptionKeyCanaryDataService
   ) {
     this.encryptedValueDataService = encryptedValueDataService;
