@@ -15,6 +15,7 @@ import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.security.oauth2.provider.authentication.BearerTokenExtractor;
 import org.springframework.security.oauth2.provider.authentication.TokenExtractor;
 import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.provider.token.store.jwk.JwkTokenStore;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -25,6 +26,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 
 @Component
 @ConditionalOnProperty(value = "security.oauth2.enabled")
@@ -40,7 +42,7 @@ public class OAuth2ExtraValidationFilter extends OncePerRequestFilter {
   @Autowired
   OAuth2ExtraValidationFilter(
       OAuth2IssuerService oAuth2IssuerService,
-      TokenStore tokenStore,
+      JwkTokenStore tokenStore,
       AuditOAuth2AuthenticationExceptionHandler oAuth2AuthenticationExceptionHandler,
       MessageSourceAccessor messageSourceAccessor,
       AuthenticationEventPublisher eventPublisher
@@ -63,7 +65,7 @@ public class OAuth2ExtraValidationFilter extends OncePerRequestFilter {
         OAuth2AccessToken accessToken = tokenStore.readAccessToken(token);
         Map<String, Object> additionalInformation = accessToken.getAdditionalInformation();
         String issuer = (String) additionalInformation.getOrDefault("iss", "");
-
+        
         if (!issuer.equals(oAuth2IssuerService.getIssuer())) {
           tokenStore.removeAccessToken(accessToken);
 

@@ -75,6 +75,7 @@ public class AuditOAuth2AuthenticationExceptionHandler extends OAuth2Authenticat
     }
     exception.setStackTrace(authException.getStackTrace());
 
+    logger.error(exception);
     try {
       doHandle(request, response, exception);
     } finally {
@@ -110,6 +111,7 @@ public class AuditOAuth2AuthenticationExceptionHandler extends OAuth2Authenticat
 
       return map;
     } catch (RuntimeException mie) {
+      logger.error(mie);
       return null;
     }
   }
@@ -120,6 +122,7 @@ public class AuditOAuth2AuthenticationExceptionHandler extends OAuth2Authenticat
       int statusCode,
       String message
   ) {
+    logger.error(message);
     AuthFailureAuditRecord authFailureAuditRecord = auditLogFactory.createAuthFailureAuditRecord(
         request,
         tokenInformation,
