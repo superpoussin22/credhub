@@ -7,6 +7,4 @@ auth_server:
 security:
   oauth2:
     enabled: true
-    resource:
-      jwk:
-        key-set-uri: https://34.206.233.195:8443/token_keys
+

@@ -19,6 +19,7 @@ public class UserContextFactory {
   @Autowired(required = false)
   private ResourceServerTokenServices resourceServerTokenServices;
 
+
   public UserContext createUserContext(Authentication authentication) {
     if (authentication instanceof PreAuthenticatedAuthenticationToken) {
       return createUserContext((PreAuthenticatedAuthenticationToken) authentication);

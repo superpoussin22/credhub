@@ -27,8 +27,9 @@ public class OAuth2IssuerServiceImpl implements OAuth2IssuerService {
 
   private final URI authServerUri;
   private final RestTemplate restTemplate;
-
+  private ResponseEntity<HashMap> authResponse;
   private String issuer;
+  private String keysUri;
 
   @Autowired
   OAuth2IssuerServiceImpl(
@@ -39,16 +40,27 @@ public class OAuth2IssuerServiceImpl implements OAuth2IssuerService {
   ) throws URISyntaxException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, IOException {
     this.authServerUri = getResolvedAuthServerUri(authServer);
     this.restTemplate = restTemplateFactory.createRestTemplate(trustStore, trustStorePassword);
+    authResponse = restTemplate.getForEntity(authServerUri, HashMap.class);
+    fetchIssuer();
+    fetchKeysUri();
   }
 
+  //probably inline thse, if refresh events not needed?
   public void fetchIssuer() {
-    ResponseEntity<HashMap> authResponse = restTemplate.getForEntity(authServerUri, HashMap.class);
     issuer = (String) authResponse.getBody().get("issuer");
   }
 
+  public void fetchKeysUri() {
+    keysUri = (String) authResponse.getBody().get("jwks_uri");
+  }
   @Override
   public String getIssuer() {
     return issuer;
+  }
+
+  @Override
+  public String getKeysURI() {
+    return keysUri;
   }
 
   private static URI getResolvedAuthServerUri(String authServer) throws URISyntaxException {
