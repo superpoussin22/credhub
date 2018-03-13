@@ -3,6 +3,7 @@ package org.cloudfoundry.credhub.service;
 import org.cloudfoundry.credhub.entity.EncryptedValue;
 
 import java.security.Key;
+import java.security.SecureRandom;
 import java.util.UUID;
 
 public class ExternalEncryptionProvider implements EncryptionProvider {
@@ -27,6 +28,11 @@ public class ExternalEncryptionProvider implements EncryptionProvider {
 
   @Override
   public String decrypt(Key key, byte[] encryptedValue, byte[] nonce) throws Exception {
+    return null;
+  }
+
+  @Override
+  public SecureRandom getSecureRandom() {
     return null;
   }
 }

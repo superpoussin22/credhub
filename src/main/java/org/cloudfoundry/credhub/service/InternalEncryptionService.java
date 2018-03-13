@@ -28,8 +28,6 @@ public abstract class InternalEncryptionService implements EncryptionProvider {
 
   abstract KeyProxy createKeyProxy(EncryptionKeyMetadata encryptionKeyMetadata);
 
-  public abstract SecureRandom getSecureRandom();
-
   public EncryptedValue encrypt(EncryptionKey key, String value) throws Exception {
     return encrypt(key.getUuid(), key.getKey(), value);
   }
