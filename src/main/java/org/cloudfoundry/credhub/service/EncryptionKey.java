@@ -8,11 +8,11 @@ import java.util.UUID;
 
 public class EncryptionKey implements RandomNumberGenerator {
 
-  private EncryptionService service;
+  private InternalEncryptionService service;
   private UUID uuid;
   private final Key key;
 
-  public EncryptionKey(EncryptionService service, UUID uuid, Key key) {
+  public EncryptionKey(InternalEncryptionService service, UUID uuid, Key key) {
     this.service = service;
     this.uuid = uuid;
     this.key = key;
@@ -38,7 +38,7 @@ public class EncryptionKey implements RandomNumberGenerator {
     return service.encrypt(this, value);
   }
 
-  public EncryptionService getService() {
+  public InternalEncryptionService getService() {
     return service;
   }
 

@@ -25,10 +25,10 @@ public class EncryptionProviderFactoryTest {
         mock(PasswordKeyProxyFactory.class)
     );
 
-    EncryptionService internal = subject.getEncryptionService(ProviderType.INTERNAL);
-    EncryptionService internalAgain = subject.getEncryptionService(ProviderType.INTERNAL);
+    InternalEncryptionService internal = subject.getEncryptionService(ProviderType.INTERNAL);
+    InternalEncryptionService internalAgain = subject.getEncryptionService(ProviderType.INTERNAL);
     assertThat(internal, sameInstance(internalAgain));
-    assertThat(internal, instanceOf(InternalEncryptionService.class));
+    assertThat(internal, instanceOf(PasswordEncryptionService.class));
   }
 
 

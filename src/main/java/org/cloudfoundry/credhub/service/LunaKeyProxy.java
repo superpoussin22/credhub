@@ -16,10 +16,10 @@ import static java.util.Collections.unmodifiableList;
 class LunaKeyProxy implements KeyProxy {
 
   private final List<Byte> salt;
-  private final EncryptionService encryptionService;
+  private final InternalEncryptionService encryptionService;
   private Key key;
 
-  LunaKeyProxy(Key key, EncryptionService encryptionService) {
+  LunaKeyProxy(Key key, InternalEncryptionService encryptionService) {
     this.key = key;
     this.encryptionService = encryptionService;
     this.salt = unmodifiableList(new ArrayList<Byte>());

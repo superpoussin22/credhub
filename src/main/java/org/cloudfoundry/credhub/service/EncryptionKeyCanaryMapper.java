@@ -50,7 +50,7 @@ public class EncryptionKeyCanaryMapper {
     List<EncryptionKeyCanary> encryptionKeyCanaries = encryptionKeyCanaryDataService.findAll();
 
     for (EncryptionKeyMetadata keyMetadata : encryptionKeysConfiguration.getKeys()) {
-      EncryptionService encryptionService = providerFactory.getEncryptionService(keyMetadata.getProviderType());
+      InternalEncryptionService encryptionService = providerFactory.getEncryptionService(keyMetadata.getProviderType());
       KeyProxy keyProxy = encryptionService.createKeyProxy(keyMetadata);
       EncryptionKeyCanary matchingCanary = null;
 
@@ -86,7 +86,7 @@ public class EncryptionKeyCanaryMapper {
     }
   }
 
-  private EncryptionKeyCanary createCanary(KeyProxy keyProxy, EncryptionService encryptionService) {
+  private EncryptionKeyCanary createCanary(KeyProxy keyProxy, InternalEncryptionService encryptionService) {
     if (encryptionKeysConfiguration.isKeyCreationEnabled()) {
       logger.info("Creating a new active key canary");
       EncryptionKeyCanary canary = new EncryptionKeyCanary();

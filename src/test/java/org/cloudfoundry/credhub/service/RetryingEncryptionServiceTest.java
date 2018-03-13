@@ -34,7 +34,7 @@ public class RetryingEncryptionServiceTest {
 
   private ReentrantReadWriteLock.ReadLock readLock;
   private ReentrantReadWriteLock.WriteLock writeLock;
-  private EncryptionService encryptionService;
+  private InternalEncryptionService encryptionService;
   private UUID activeKeyUuid;
 
   private ReentrantReadWriteLock readWriteLock;
@@ -46,7 +46,7 @@ public class RetryingEncryptionServiceTest {
   @Before
   public void beforeEach() {
     keySet = mock(EncryptionKeySet.class);
-    encryptionService = mock(EncryptionService.class);
+    encryptionService = mock(InternalEncryptionService.class);
 
     activeKeyUuid = UUID.randomUUID();
     firstActiveKey = mock(EncryptionKey.class);

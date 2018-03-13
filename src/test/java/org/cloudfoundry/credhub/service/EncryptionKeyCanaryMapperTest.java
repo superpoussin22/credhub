@@ -49,7 +49,7 @@ public class EncryptionKeyCanaryMapperTest {
   private EncryptionKeyCanaryMapper subject;
   private EncryptionKeyCanaryDataService encryptionKeyCanaryDataService;
   private EncryptionKeySet keySet;
-  private EncryptionService encryptionService;
+  private InternalEncryptionService encryptionService;
   private UUID activeCanaryUuid;
   private UUID existingCanaryUuid1;
   private UUID existingCanaryUuid2;
@@ -79,7 +79,7 @@ public class EncryptionKeyCanaryMapperTest {
   @Before()
   public void beforeEach() throws Exception {
     encryptionKeyCanaryDataService = mock(EncryptionKeyCanaryDataService.class);
-    encryptionService = mock(EncryptionService.class);
+    encryptionService = mock(InternalEncryptionService.class);
     encryptionKeysConfiguration = mock(EncryptionKeysConfiguration.class);
     keySet = new EncryptionKeySet();
     providerFactory = mock(EncryptionProviderFactory.class);

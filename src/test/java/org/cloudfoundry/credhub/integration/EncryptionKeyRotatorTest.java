@@ -22,8 +22,8 @@ import org.cloudfoundry.credhub.request.StringGenerationParameters;
 import org.cloudfoundry.credhub.service.EncryptionKey;
 import org.cloudfoundry.credhub.service.EncryptionKeyRotator;
 import org.cloudfoundry.credhub.service.EncryptionKeySet;
-import org.cloudfoundry.credhub.service.EncryptionService;
 import org.cloudfoundry.credhub.service.InternalEncryptionService;
+import org.cloudfoundry.credhub.service.PasswordEncryptionService;
 import org.cloudfoundry.credhub.service.PasswordBasedKeyProxy;
 import org.cloudfoundry.credhub.service.PasswordKeyProxyFactory;
 import org.cloudfoundry.credhub.util.DatabaseProfileResolver;
@@ -91,7 +91,7 @@ public class EncryptionKeyRotatorTest {
   @Autowired
   private PasswordKeyProxyFactory passwordKeyProxyFactory;
 
-  private EncryptionService encryptionService;
+  private InternalEncryptionService encryptionService;
 
   @SpyBean
   private EncryptionKeySet keySet;
@@ -119,7 +119,7 @@ public class EncryptionKeyRotatorTest {
         .apply(springSecurity())
         .build();
 
-    encryptionService = new InternalEncryptionService(passwordKeyProxyFactory);
+    encryptionService = new PasswordEncryptionService(passwordKeyProxyFactory);
 
     setActiveKey(0);
   }
