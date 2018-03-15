@@ -2,6 +2,7 @@ package org.cloudfoundry.credhub.service;
 
 import org.assertj.core.util.Lists;
 import org.cloudfoundry.credhub.config.EncryptionKeyMetadata;
+import org.cloudfoundry.credhub.config.EncryptionKeyProvider;
 import org.cloudfoundry.credhub.config.EncryptionKeysConfiguration;
 import org.cloudfoundry.credhub.config.ProviderType;
 import org.cloudfoundry.credhub.data.EncryptionKeyCanaryDataService;
@@ -62,6 +63,7 @@ public class EncryptionKeyCanaryMapperTest {
   private KeyProxy existingKey1Proxy;
   private KeyProxy existingKey2Proxy;
   private EncryptionKeyMetadata activeKeyData;
+  private EncryptionKeyProvider activeProvider;
   private EncryptionKeyMetadata existingKey1Data;
   private EncryptionKeyMetadata existingKey2Data;
   private EncryptionKeyCanary activeKeyCanary;
@@ -92,17 +94,23 @@ public class EncryptionKeyCanaryMapperTest {
     activeKeyData = new EncryptionKeyMetadata();
     activeKeyData.setEncryptionPassword("this-is-active");
     activeKeyData.setActive(true);
-    activeKeyData.setProviderType(ProviderType.INTERNAL);
+    activeKeyData.setProviderName("internal");
+    activeProvider.setProviderName("internal");
+    activeProvider.setProviderType(ProviderType.INTERNAL);
 
     existingKey1Data = new EncryptionKeyMetadata();
     existingKey1Data.setEncryptionPassword("existing-key-1");
     existingKey1Data.setActive(false);
-    existingKey1Data.setProviderType(ProviderType.INTERNAL);
+    activeKeyData.setProviderName("internal");
+    activeProvider.setProviderName("internal");
+    activeProvider.setProviderType(ProviderType.INTERNAL);
 
     existingKey2Data = new EncryptionKeyMetadata();
     existingKey2Data.setEncryptionPassword("existing-key-2");
     existingKey2Data.setActive(false);
-    existingKey2Data.setProviderType(ProviderType.INTERNAL);
+    activeKeyData.setProviderName("internal");
+    activeProvider.setProviderName("internal");
+    activeProvider.setProviderType(ProviderType.INTERNAL);
 
     activeKey = mock(Key.class, "active key");
     existingKey1 = mock(Key.class, "key 1");
@@ -131,7 +139,7 @@ public class EncryptionKeyCanaryMapperTest {
         activeKeyData,
         existingKey2Data
     ));
-    when(providerFactory.getEncryptionService(ProviderType.INTERNAL)).thenReturn(encryptionService);
+    when(providerFactory.getEncryptionService(activeProvider)).thenReturn(encryptionService);
 
     when(encryptionService.createKeyProxy(eq(activeKeyData))).thenReturn(activeKeyProxy);
     when(encryptionService.createKeyProxy(eq(existingKey1Data))).thenReturn(existingKey1Proxy);

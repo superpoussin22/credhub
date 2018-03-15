@@ -1,8 +1,8 @@
 package org.cloudfoundry.credhub.service;
 
+import org.cloudfoundry.credhub.config.EncryptionKeyProvider;
 import org.cloudfoundry.credhub.config.EncryptionKeysConfiguration;
 import org.cloudfoundry.credhub.config.LunaProviderProperties;
-import org.cloudfoundry.credhub.config.ProviderType;
 import org.cloudfoundry.credhub.util.TimedRetry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,7 @@ public class EncryptionProviderFactory {
   private LunaProviderProperties lunaProviderProperties;
   private TimedRetry timedRetry;
   private PasswordKeyProxyFactory passwordKeyProxyFactory;
-  private HashMap<ProviderType, InternalEncryptionService> map;
+  private HashMap<String, InternalEncryptionService> map;
 
   @Autowired
   public EncryptionProviderFactory(EncryptionKeysConfiguration keysConfiguration,
@@ -29,22 +29,24 @@ public class EncryptionProviderFactory {
     map = new HashMap<>();
   }
 
-  public InternalEncryptionService getEncryptionService(ProviderType provider) throws Exception {
+  public InternalEncryptionService getEncryptionService(EncryptionKeyProvider provider) throws Exception {
     InternalEncryptionService encryptionService;
 
-    if (map.containsKey(provider)) {
-      return map.get(provider);
+    if (map.containsKey(provider.getProviderName())) {
+      return map.get(provider.getProviderName());
     } else {
-      switch (provider) {
+      switch (provider.getProviderType()) {
         case HSM:
           encryptionService = new LunaEncryptionService(new LunaConnection(lunaProviderProperties),
               encryptionKeysConfiguration.isKeyCreationEnabled(),
               timedRetry);
           break;
+//        case EXTERNAL:
+//          encryptionService = new ExternalEncryptionProvider();
         default:
           encryptionService = new PasswordEncryptionService(passwordKeyProxyFactory);
       }
-      map.put(provider, encryptionService);
+      map.put(provider.getProviderName(), encryptionService);
       return encryptionService;
     }
   }

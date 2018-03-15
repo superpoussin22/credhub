@@ -1,6 +1,5 @@
 package org.cloudfoundry.credhub.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -14,13 +13,10 @@ import org.cloudfoundry.credhub.service.grpc.EncryptionProviderGrpc;
 import org.cloudfoundry.credhub.service.grpc.EncryptionRequest;
 import org.cloudfoundry.credhub.service.grpc.EncryptionResponse;
 
-import java.security.Key;
-import java.security.SecureRandom;
-import java.util.HashMap;
-import java.util.UUID;
-
 public class ExternalEncryptionProvider implements EncryptionProvider {
   private static final Logger logger = LogManager.getLogger(ExternalEncryptionProvider.class.getName());
+  private static final String CHARSET = "UTF-8";
+
   private final ObjectMapper objectMapper;
   private final EncryptionProviderGrpc.EncryptionProviderBlockingStub blockingStub;
 
@@ -39,47 +35,31 @@ public class ExternalEncryptionProvider implements EncryptionProvider {
 
   @Override
   public EncryptedValue encrypt(EncryptionKey key, String value) throws Exception {
-  // TODO convert EncryptionKey into key value strings and call the private encrypt method
-    return null;
+    EncryptionResponse response = encrypt(key.getUuid().toString(), value);
+    return new EncryptedValue(key.getUuid(),response.getData().toByteArray(),response.getNonce().toByteArray());
   }
 
-  @Override
-  public EncryptedValue encrypt(UUID canaryUuid, Key key, String value) throws Exception {
-    return null;
-  }
 
   @Override
   public String decrypt(EncryptionKey key, byte[] encryptedValue, byte[] nonce) throws Exception {
-    return null;
+    DecryptionResponse response = decrypt(new String(encryptedValue, CHARSET), key.getUuid().toString(), new String(nonce, CHARSET));
+    return response.getData();
   }
 
-  @Override
-  public String decrypt(Key key, byte[] encryptedValue, byte[] nonce) throws Exception {
-    return null;
-  }
 
-  @Override
-  public SecureRandom getSecureRandom() {
-    return null;
-  }
-
-  private void encrypt(String value, String keyId) throws JsonProcessingException {
+  private EncryptionResponse encrypt(String value, String keyId) throws Exception {
     EncryptionRequest request = EncryptionRequest.newBuilder().setData(value).setKey(keyId).build();
     EncryptionResponse response;
     try {
       response = blockingStub.encrypt(request);
     } catch (StatusRuntimeException e) {
-      logger.error("RPC failed ", e);
-      return;
+      logger.error("Error for request: " + request.getData(), e);
+      throw(e);
     }
-    final HashMap<String, String> result = new HashMap<>();
-    result.put("value", response.getData().toStringUtf8());
-    result.put("nonce", response.getNonce().toStringUtf8());
-
-    logger.debug("Encrypted value");
+    return response;
   }
 
-  private void decrypt(String value, String keyId, String nonce) {
+  private DecryptionResponse decrypt(String value, String keyId, String nonce) throws Exception {
     DecryptionRequest request = DecryptionRequest.newBuilder().
         setData(value).
         setKey(keyId).
@@ -90,9 +70,9 @@ public class ExternalEncryptionProvider implements EncryptionProvider {
     try {
       response = blockingStub.decrypt(request);
     } catch (StatusRuntimeException e) {
-      logger.error("RPC failed ", e);
-      return;
+      logger.error("Error for request: " + request.getData(), e);
+      throw(e);
     }
-    logger.debug("Decrypted value");
+    return response;
   }
 }

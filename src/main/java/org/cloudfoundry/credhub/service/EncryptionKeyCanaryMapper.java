@@ -3,6 +3,7 @@ package org.cloudfoundry.credhub.service;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cloudfoundry.credhub.config.EncryptionKeyMetadata;
+import org.cloudfoundry.credhub.config.EncryptionKeyProvider;
 import org.cloudfoundry.credhub.config.EncryptionKeysConfiguration;
 import org.cloudfoundry.credhub.data.EncryptionKeyCanaryDataService;
 import org.cloudfoundry.credhub.entity.EncryptedValue;
@@ -50,7 +51,9 @@ public class EncryptionKeyCanaryMapper {
     List<EncryptionKeyCanary> encryptionKeyCanaries = encryptionKeyCanaryDataService.findAll();
 
     for (EncryptionKeyMetadata keyMetadata : encryptionKeysConfiguration.getKeys()) {
-      InternalEncryptionService encryptionService = providerFactory.getEncryptionService(keyMetadata.getProviderType());
+
+
+      InternalEncryptionService encryptionService = providerFactory.getEncryptionService(getProviderFromName(keyMetadata));
       KeyProxy keyProxy = encryptionService.createKeyProxy(keyMetadata);
       EncryptionKeyCanary matchingCanary = null;
 
@@ -73,7 +76,7 @@ public class EncryptionKeyCanaryMapper {
       }
       try {
         keySet.add(new EncryptionKey(
-            providerFactory.getEncryptionService(keyMetadata.getProviderType()),
+            providerFactory.getEncryptionService(getProviderFromName(keyMetadata)),
             matchingCanary.getUuid(),
             keyProxy.getKey()));
       } catch (Exception e) {
@@ -84,6 +87,16 @@ public class EncryptionKeyCanaryMapper {
     if (keySet.getActive() == null) {
       throw new RuntimeException("No active key was found");
     }
+  }
+
+  private EncryptionKeyProvider getProviderFromName(EncryptionKeyMetadata encryptionKeyMetadata) {
+    for(EncryptionKeyProvider provider : encryptionKeysConfiguration.getProviders()) {
+      if (encryptionKeyMetadata.getProviderName().equals(provider.getProviderName())) {
+        return provider;
+      }
+    }
+
+    throw new RuntimeException("Provider name not found in list of keys");
   }
 
   private EncryptionKeyCanary createCanary(KeyProxy keyProxy, InternalEncryptionService encryptionService) {
