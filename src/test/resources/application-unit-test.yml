@@ -4,9 +4,13 @@ auth_server:
 encryption:
   keys:
   - encryption_password: opensesame
-    provider_type: internal
+    provider_name: int
     active: true
   - encryption_password: correcthorsebatterystaple
+    provider_name: int
+    active: false
+  providers:
+  - provider_name: int
     provider_type: internal
   key_creation_enabled: true
 

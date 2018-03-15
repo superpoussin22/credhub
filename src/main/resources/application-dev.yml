@@ -14,7 +14,9 @@ encryption:
     active: false
   providers:
   - provider_name: int
-    provider_type: internal
+    provider_type: external
+    host: localhost
+    port: 50051
   key_creation_enabled: true
   
 security:
