@@ -1,5 +1,6 @@
 package org.cloudfoundry.credhub.config;
 
+@SuppressWarnings("unused")
 public class EncryptionKeyProvider {
   private String providerName, host;
   private Integer port;

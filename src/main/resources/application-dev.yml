@@ -11,6 +11,7 @@ encryption:
     active: true
   - encryption_password: correcthorsebatterystaple
     provider_name: int
+    active: false
   providers:
   - provider_name: int
     provider_type: internal
