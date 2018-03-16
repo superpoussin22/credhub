@@ -20,17 +20,14 @@ public class ExternalEncryptionProvider implements EncryptionProvider {
 
   private final ObjectMapper objectMapper;
   private final EncryptionProviderGrpc.EncryptionProviderBlockingStub blockingStub;
-  private final PasswordKeyProxyFactory passwordKeyProxyFactory;
 
-  public ExternalEncryptionProvider(PasswordKeyProxyFactory passwordKeyProxyFactory,
-      String host, int port){
+  public ExternalEncryptionProvider(String host, int port){
 
     this(ManagedChannelBuilder.forAddress(host, port)
         // Channels are secure by default (via SSL/TLS). For the example we disable TLS to avoid
         // needing certificates.
         .usePlaintext(true)
         .build());
-    this.passwordKeyProxyFactory = passwordKeyProxyFactory;
   }
 
   ExternalEncryptionProvider(ManagedChannel channel){
@@ -50,13 +47,6 @@ public class ExternalEncryptionProvider implements EncryptionProvider {
     DecryptionResponse response = decrypt(new String(encryptedValue, CHARSET), key.getUuid().toString(), new String(nonce, CHARSET));
     return response.getData();
   }
-
-  @Override
-  public KeyProxy createKeyProxy(EncryptionKeyMetadata encryptionKeyMetadata) {
-    return passwordKeyProxyFactory.createPasswordKeyProxy(encryptionKeyMetadata, this);
-
-  }
-
 
   private EncryptionResponse encrypt(String value, String keyId) throws Exception {
     EncryptionRequest request = EncryptionRequest.newBuilder().setData(value).setKey(keyId).build();

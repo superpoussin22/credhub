@@ -42,7 +42,7 @@ public class EncryptionProviderFactory {
               timedRetry);
           break;
         case EXTERNAL:
-          encryptionService = new ExternalEncryptionProvider(passwordKeyProxyFactory, provider.getHost(), Integer.valueOf(provider.getPort()));
+          encryptionService = new ExternalEncryptionProvider(provider.getHost(), Integer.valueOf(provider.getPort()));
           break;
         default:
           encryptionService = new PasswordEncryptionService(passwordKeyProxyFactory);

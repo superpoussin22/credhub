@@ -7,5 +7,5 @@ import org.springframework.stereotype.Component;
 @Component
 @Profile("!unit-test")
 public interface PasswordKeyProxyFactory {
-  KeyProxy createPasswordKeyProxy(EncryptionKeyMetadata encryptionKeyMetadata, EncryptionProvider encryptionService);
+  KeyProxy createPasswordKeyProxy(EncryptionKeyMetadata encryptionKeyMetadata, InternalEncryptionService encryptionService);
 }

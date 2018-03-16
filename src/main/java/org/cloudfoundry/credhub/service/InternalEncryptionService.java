@@ -1,5 +1,6 @@
 package org.cloudfoundry.credhub.service;
 
+import org.cloudfoundry.credhub.config.EncryptionKeyMetadata;
 import org.cloudfoundry.credhub.entity.EncryptedValue;
 
 import java.security.InvalidAlgorithmParameterException;
@@ -41,6 +42,8 @@ public abstract class InternalEncryptionService implements EncryptionProvider {
 
     return new EncryptedValue(canaryUuid, encrypted, nonce);
   }
+
+  abstract KeyProxy createKeyProxy(EncryptionKeyMetadata encryptionKeyMetadata);
 
   @Override
   public String decrypt(EncryptionKey key, byte[] encryptedValue, byte[] nonce) throws Exception {
