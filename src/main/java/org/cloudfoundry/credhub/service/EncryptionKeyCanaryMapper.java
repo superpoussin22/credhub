@@ -63,10 +63,12 @@ public class EncryptionKeyCanaryMapper {
           break;
         }
       }
-
+      EncryptionKey encryptionKey = new EncryptionKey(providerFactory.getEncryptionService(getProviderFromName(keyMetadata)), null, keyProxy.getKey());
       if (matchingCanary == null) {
         if (keyMetadata.isActive()) {
-          matchingCanary = createCanary(keyProxy, encryptionService);
+
+
+          matchingCanary = createCanary(keyProxy, encryptionService, encryptionKey);
         } else {
           continue;
         }
@@ -75,10 +77,8 @@ public class EncryptionKeyCanaryMapper {
         keySet.setActive(matchingCanary.getUuid());
       }
       try {
-        keySet.add(new EncryptionKey(
-            providerFactory.getEncryptionService(getProviderFromName(keyMetadata)),
-            matchingCanary.getUuid(),
-            keyProxy.getKey()));
+        encryptionKey.setUuid(matchingCanary.getUuid());
+        keySet.add(encryptionKey);
       } catch (Exception e) {
         throw new RuntimeException("Failed to connect to encryption provider", e);
       }
@@ -99,14 +99,14 @@ public class EncryptionKeyCanaryMapper {
     throw new RuntimeException("Provider name not found in list of keys");
   }
 
-  private EncryptionKeyCanary createCanary(KeyProxy keyProxy, InternalEncryptionService encryptionService) {
+  private EncryptionKeyCanary createCanary(KeyProxy keyProxy, InternalEncryptionService encryptionProvider, EncryptionKey encryptionKey) {
     if (encryptionKeysConfiguration.isKeyCreationEnabled()) {
       logger.info("Creating a new active key canary");
       EncryptionKeyCanary canary = new EncryptionKeyCanary();
 
       try {
-        EncryptedValue encryptionData = encryptionService
-            .encrypt(null, keyProxy.getKey(), CANARY_VALUE);
+        EncryptedValue encryptionData = encryptionProvider
+            .encrypt(encryptionKey, CANARY_VALUE);
         canary.setEncryptedCanaryValue(encryptionData.getEncryptedValue());
         canary.setNonce(encryptionData.getNonce());
         final List<Byte> salt = keyProxy.getSalt();

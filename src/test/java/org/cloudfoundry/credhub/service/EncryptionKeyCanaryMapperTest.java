@@ -212,6 +212,10 @@ public class EncryptionKeyCanaryMapperTest {
           canaries.add(activeKeyCanary);
           return activeKeyCanary;
         });
+    when(encryptionService.encrypt(any(EncryptionKey.class), eq(CANARY_VALUE))).thenReturn(new EncryptedValue(
+        null,
+        "fake-encrypted-value",
+        "fake-nonce"));
 
     subject = new EncryptionKeyCanaryMapper(encryptionKeyCanaryDataService,
         encryptionKeysConfiguration, timedRetry, providerFactory);
@@ -278,6 +282,10 @@ public class EncryptionKeyCanaryMapperTest {
         .thenThrow(new AEADBadTagException());
     when(encryptionKeyCanaryDataService.save(any(EncryptionKeyCanary.class)))
         .thenReturn(activeKeyCanary);
+    when(encryptionService.encrypt(any(EncryptionKey.class), eq(CANARY_VALUE))).thenReturn(new EncryptedValue(
+        null,
+        "fake-encrypted-value",
+        "fake-nonce"));
 
     subject = new EncryptionKeyCanaryMapper(encryptionKeyCanaryDataService,
         encryptionKeysConfiguration, timedRetry, providerFactory);
@@ -309,6 +317,10 @@ public class EncryptionKeyCanaryMapperTest {
             "Could not process input data: function 'C_Decrypt' returns 0x40"));
     when(encryptionKeyCanaryDataService.save(any(EncryptionKeyCanary.class)))
         .thenReturn(activeKeyCanary);
+    when(encryptionService.encrypt(any(EncryptionKey.class), eq(CANARY_VALUE))).thenReturn(new EncryptedValue(
+        null,
+        "fake-encrypted-value",
+        "fake-nonce"));
 
     subject = new EncryptionKeyCanaryMapper(encryptionKeyCanaryDataService,
         encryptionKeysConfiguration, timedRetry, providerFactory);
@@ -377,6 +389,10 @@ public class EncryptionKeyCanaryMapperTest {
         .thenReturn("different-canary-value");
     when(encryptionKeyCanaryDataService.save(any(EncryptionKeyCanary.class)))
         .thenReturn(activeKeyCanary);
+    when(encryptionService.encrypt(any(EncryptionKey.class), eq(CANARY_VALUE))).thenReturn(new EncryptedValue(
+        null,
+        "fake-encrypted-value",
+        "fake-nonce"));
 
     subject = new EncryptionKeyCanaryMapper(encryptionKeyCanaryDataService,
         encryptionKeysConfiguration, timedRetry, providerFactory);
@@ -463,7 +479,7 @@ public class EncryptionKeyCanaryMapperTest {
     assertThat(encryptionKeyCanary.getEncryptedCanaryValue(),
         equalTo("fake-encrypted-value".getBytes()));
     assertThat(encryptionKeyCanary.getNonce(), equalTo("fake-nonce".getBytes()));
-    verify(encryptionService, times(1)).encrypt(null, activeKey, CANARY_VALUE);
+    verify(encryptionService, times(1)).encrypt(any(EncryptionKey.class), eq(CANARY_VALUE));
   }
 
   private EncryptionKeyCanary createEncryptionCanary(UUID canaryUuid, String encryptedValue,
