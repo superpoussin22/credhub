@@ -64,8 +64,8 @@ public class KeyUsageControllerTest {
     countByEncryptionKey.put(knownKey, 10L);
     countByEncryptionKey.put(unknownKey, 5L);
 
-    keySet.add(new EncryptionKey(mock(InternalEncryptionService.class), activeKey, mock(Key.class)));
-    keySet.add(new EncryptionKey(mock(InternalEncryptionService.class), knownKey, mock(Key.class)));
+    keySet.add(new EncryptionKey(mock(InternalEncryptionService.class), activeKey, mock(Key.class), "key-name"));
+    keySet.add(new EncryptionKey(mock(InternalEncryptionService.class), knownKey, mock(Key.class), "key-name"));
     keySet.setActive(activeKey);
     when(credentialVersionDataService.countByEncryptionKey()).thenReturn(countByEncryptionKey);
 

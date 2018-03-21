@@ -37,15 +37,20 @@ public class ExternalEncryptionProvider implements EncryptionProvider {
 
   @Override
   public EncryptedValue encrypt(EncryptionKey key, String value) throws Exception {
-    EncryptionResponse response = encrypt(key.getUuid().toString(), value);
+    EncryptionResponse response = encrypt(key.getEncryptionKeyName(), value);
     return new EncryptedValue(key.getUuid(),response.getData().toByteArray(),response.getNonce().toByteArray());
   }
 
 
   @Override
   public String decrypt(EncryptionKey key, byte[] encryptedValue, byte[] nonce) throws Exception {
-    DecryptionResponse response = decrypt(new String(encryptedValue, CHARSET), key.getUuid().toString(), new String(nonce, CHARSET));
+    DecryptionResponse response = decrypt(new String(encryptedValue, CHARSET), key.getEncryptionKeyName(), new String(nonce, CHARSET));
     return response.getData();
+  }
+
+  @Override
+  public KeyProxy createKeyProxy(EncryptionKeyMetadata encryptionKeyMetadata) {
+    return new ExternalKeyProxy(encryptionKeyMetadata, this);
   }
 
   private EncryptionResponse encrypt(String value, String keyId) throws Exception {

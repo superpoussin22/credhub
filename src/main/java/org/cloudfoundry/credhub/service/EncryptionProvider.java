@@ -1,5 +1,6 @@
 package org.cloudfoundry.credhub.service;
 
+import org.cloudfoundry.credhub.config.EncryptionKeyMetadata;
 import org.cloudfoundry.credhub.entity.EncryptedValue;
 
 import java.security.NoSuchAlgorithmException;
@@ -22,4 +23,6 @@ public interface EncryptionProvider {
 
     return secureRandom;
   }
+
+  KeyProxy createKeyProxy(EncryptionKeyMetadata encryptionKeyMetadata);
 }
